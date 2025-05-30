@@ -12,6 +12,7 @@ export interface BaseProviderConfig {
   timeout?: number;
   retries?: number;
   defaultModel?: string;
+  [key: string]: unknown;
 }
 
 // OpenAI specific configuration
