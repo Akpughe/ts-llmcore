@@ -181,7 +181,7 @@ export class ModelCapabilityDetector {
     provider: ProviderName
   ): ModelCapabilities {
     const providerCaps = this.CAPABILITIES[provider];
-    return providerCaps[model] || providerCaps["default"];
+    return providerCaps[model] || providerCaps["default"]!;
   }
 
   static supportsFeature(
