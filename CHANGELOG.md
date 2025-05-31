@@ -112,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Quick Start:**
 
 ```typescript
-import { LLMCore } from "@davak/llm-core";
+import { LLMCore } from "llm-core";
 
 const llm = new LLMCore({
   provider: "openai",

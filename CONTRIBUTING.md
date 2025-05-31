@@ -31,8 +31,8 @@ This project adheres to a code of conduct. By participating, you are expected to
 1. **Fork and Clone**
 
    ```bash
-   git clone https://github.com/Akpughe/@davak/llm-core.git
-   cd @davak/llm-core
+   git clone https://github.com/Akpughe/ts-llmcore.git
+   cd llm-core
    ```
 
 2. **Install Dependencies**
