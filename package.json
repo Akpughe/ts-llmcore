@@ -1,5 +1,5 @@
 {
-  "name": "@davak/llm-core",
+  "name": "@davak/@davak/llm-core",
   "version": "0.1.0",
   "description": "A unified TypeScript/JavaScript package providing a single interface for multiple LLM providers (OpenAI, Claude, Groq, Grok). Eliminate vendor lock-in with seamless provider switching, consistent responses, and built-in cost tracking.",
   "main": "dist/index.js",

@@ -2,7 +2,7 @@
 
 **A unified TypeScript/JavaScript package providing a single interface for multiple LLM providers**
 
-[![npm version](https://badge.fury.io/js/llm-core.svg)](https://badge.fury.io/js/llm-core)
+[![npm version](https://badge.fury.io/js/@davak/llm-core.svg)](https://badge.fury.io/js/@davak/llm-core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/Akpughe/ts-llmcore/workflows/CI/badge.svg)](https://github.com/Akpughe/ts-llmcore/actions)
@@ -26,13 +26,13 @@ Eliminate vendor lock-in and simplify your AI integrations with support for **Op
 ### Installation
 
 ```bash
-npm install llm-core
+npm install @davak/llm-core
 ```
 
 ### Basic Usage
 
 ```typescript
-import { LLMCore } from "llm-core";
+import { LLMCore } from "@davak/llm-core";
 
 // Initialize with your preferred provider
 const llm = new LLMCore({
@@ -133,7 +133,7 @@ if (response.message.toolCalls) {
 ### Cost Tracking and Token Management
 
 ```typescript
-import { TokenCounter, CostCalculator } from "llm-core";
+import { TokenCounter, CostCalculator } from "@davak/llm-core";
 
 // Count tokens before sending
 const tokenCount = TokenCounter.countConversationTokens(messages, {
@@ -232,7 +232,7 @@ console.log(`Latency: ${health.latency}ms`);
 ### Model Capabilities Detection
 
 ```typescript
-import { ModelCapabilityDetector } from "llm-core";
+import { ModelCapabilityDetector } from "@davak/llm-core";
 
 const capabilities = ModelCapabilityDetector.getCapabilities("gpt-4o");
 console.log(`Supports streaming: ${capabilities.streaming}`);
@@ -243,7 +243,7 @@ console.log(`Max context: ${capabilities.contextLength} tokens`);
 ### Response Standardization
 
 ```typescript
-import { ResponseStandardizer } from "llm-core";
+import { ResponseStandardizer } from "@davak/llm-core";
 
 const standardized = ResponseStandardizer.standardize(response, {
   includeRaw: true,
@@ -272,7 +272,7 @@ const response = await llm.chat({
 ## 📊 Error Handling
 
 ```typescript
-import { LLMCoreError } from "llm-core";
+import { LLMCoreError } from "@davak/llm-core";
 
 try {
   const response = await llm.chat({
@@ -354,16 +354,16 @@ const groqLLM = new LLMCore({
 
 ```bash
 # npm
-npm install llm-core
+npm install @davak/llm-core
 
 # yarn
-yarn add llm-core
+yarn add @davak/llm-core
 
 # pnpm
-pnpm add llm-core
+pnpm add @davak/llm-core
 
 # bun
-bun add llm-core
+bun add @davak/llm-core
 ```
 
 ### Peer Dependencies (Optional)
@@ -428,8 +428,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 
 ```bash
-git clone https://github.com/llmcore/llm-core.git
-cd llm-core
+git clone https://github.com/llmcore/@davak/llm-core.git
+cd @davak/llm-core
 npm install
 npm run dev
 ```
@@ -455,7 +455,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [📚 Documentation](https://github.com/Akpughe/ts-llmcore#readme)
 - [🐛 Issues](https://github.com/Akpughe/ts-llmcore/issues)
 - [💬 Discussions](https://github.com/Akpughe/ts-llmcore/discussions)
-- [📦 npm Package](https://www.npmjs.com/package/llm-core)
+- [📦 npm Package](https://www.npmjs.com/package/@davak/llm-core)
 
 ## 🌟 Show Your Support
 
