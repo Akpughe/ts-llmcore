@@ -8,7 +8,7 @@ import type {
   StreamingChatResponse,
   StreamResponse,
   ProviderName,
-  ModelName,
+  // ModelName,
   LLMCoreError,
 } from "../types/index";
 import { ResponseStandardizer } from "./response-standardizer";
@@ -490,51 +490,51 @@ export class StreamUtils {
     })();
   }
 
-  private static createAbortController(): {
-    abort: () => void;
-    signal: {
-      aborted: boolean;
-      addEventListener: (type: string, listener: () => void) => void;
-      removeEventListener: (type: string, listener: () => void) => void;
-    };
-  } {
-    const controller = new AbortController();
-    return {
-      abort: () => controller.abort(),
-      signal: {
-        aborted: controller.signal.aborted,
-        addEventListener: (type: string, listener: () => void) => {
-          controller.signal.addEventListener(type, listener);
-        },
-        removeEventListener: (type: string, listener: () => void) => {
-          controller.signal.removeEventListener(type, listener);
-        },
-      },
-    };
-  }
+  // private static createAbortController(): {
+  //   abort: () => void;
+  //   signal: {
+  //     aborted: boolean;
+  //     addEventListener: (type: string, listener: () => void) => void;
+  //     removeEventListener: (type: string, listener: () => void) => void;
+  //   };
+  // } {
+  //   const controller = new AbortController();
+  //   return {
+  //     abort: () => controller.abort(),
+  //     signal: {
+  //       aborted: controller.signal.aborted,
+  //       addEventListener: (type: string, listener: () => void) => {
+  //         controller.signal.addEventListener(type, listener);
+  //       },
+  //       removeEventListener: (type: string, listener: () => void) => {
+  //         controller.signal.removeEventListener(type, listener);
+  //       },
+  //     },
+  //   };
+  // }
 
-  private static createStreamMetadata(
-    provider: ProviderName,
-    model: ModelName
-  ): { requestId: string; model: ModelName; startTime: number } {
-    return {
-      requestId: `${provider}-${Date.now()}`,
-      model,
-      startTime: Date.now(),
-    };
-  }
+  // private static createStreamMetadata(
+  //   provider: ProviderName,
+  //   model: ModelName
+  // ): { requestId: string; model: ModelName; startTime: number } {
+  //   return {
+  //     requestId: `${provider}-${Date.now()}`,
+  //     model,
+  //     startTime: Date.now(),
+  //   };
+  // }
 
-  private static handleStreamError(error: Error): never {
-    throw error;
-  }
+  // private static handleStreamError(error: Error): never {
+  //   throw error;
+  // }
 
-  private static async *processStream(
-    stream: AsyncGenerator<StreamingChatResponse>,
-    onChunk: (chunk: StreamingChatResponse) => void
-  ): AsyncGenerator<StreamingChatResponse> {
-    for await (const chunk of stream) {
-      onChunk(chunk);
-      yield chunk;
-    }
-  }
+  // private static async *processStream(
+  //   stream: AsyncGenerator<StreamingChatResponse>,
+  //   onChunk: (chunk: StreamingChatResponse) => void
+  // ): AsyncGenerator<StreamingChatResponse> {
+  //   for await (const chunk of stream) {
+  //     onChunk(chunk);
+  //     yield chunk;
+  //   }
+  // }
 }
