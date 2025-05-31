@@ -2,8 +2,14 @@
  * Response type definitions for LLMCore package
  */
 
-import type { ProviderName, ModelName } from "./providers";
-import type { Message, FinishReason } from "./messages";
+import type {
+  ProviderName,
+  ModelName,
+  FinishReason,
+  Message,
+  ToolCall,
+} from "./index";
+import type { ModelCapabilities } from "../utils/model-capabilities";
 
 // Base response interface
 export interface BaseResponse {
@@ -164,16 +170,6 @@ export interface ModelPricing {
   completionTokens: number;
   currency: string;
   unit: string; // e.g., 'per_1k_tokens'
-}
-
-// Model capabilities
-export interface ModelCapabilities {
-  streaming: boolean;
-  tools: boolean;
-  vision: boolean;
-  json: boolean;
-  maxTemperature: number;
-  maxTopP: number;
 }
 
 // Batch response for multiple requests

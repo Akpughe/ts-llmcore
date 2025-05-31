@@ -42,12 +42,14 @@ interface GrokResponse {
   created: number;
   model: string;
   choices: GrokChoice[];
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  usage: GrokUsage;
   system_fingerprint?: string;
+}
+
+interface GrokUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
 }
 
 interface GrokChoice {
@@ -68,16 +70,6 @@ interface GrokStreamResponse {
       content?: string;
     };
     finish_reason: null | "stop" | "length" | "content_filter";
-  }>;
-}
-
-interface GrokModelsResponse {
-  object: "list";
-  data: Array<{
-    id: string;
-    object: "model";
-    created: number;
-    owned_by: string;
   }>;
 }
 
@@ -187,11 +179,14 @@ export class GrokProvider extends AbstractProvider {
     // Return our supported models as Grok may not have a public models endpoint
     const supportedModels = GrokProvider.SUPPORTED_MODELS.map((modelId) => {
       const pricing = GrokProvider.MODEL_PRICING[modelId]!; // All supported models have pricing
+      const contextLength = this.getModelContextLength(modelId);
+      const maxTokens = this.getModelMaxTokens(modelId);
+
       return {
         id: modelId,
         name: modelId,
-        contextLength: this.getModelContextLength(modelId),
-        maxTokens: this.getModelMaxTokens(modelId),
+        contextLength,
+        maxTokens,
         pricing: {
           promptTokens: pricing.input,
           completionTokens: pricing.output,
@@ -205,6 +200,10 @@ export class GrokProvider extends AbstractProvider {
           json: true,
           maxTemperature: 2,
           maxTopP: 1,
+          contextLength,
+          maxTokens,
+          multimodal: modelId.includes("vision"),
+          reasoning: true,
         },
         status: "active" as const,
       };

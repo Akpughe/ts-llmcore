@@ -20,17 +20,22 @@ import { AbstractProvider } from "./base";
 // Claude API interfaces
 interface ClaudeMessage {
   role: "user" | "assistant";
-  content: string | ClaudeContent[];
-}
-
-interface ClaudeContent {
-  type: "text" | "image";
-  text?: string;
-  source?: {
-    type: "base64";
-    media_type: string;
-    data: string;
-  };
+  content:
+    | string
+    | Array<{
+        type: "text" | "image" | "tool_use" | "tool_result";
+        text?: string;
+        source?: {
+          type: "base64";
+          media_type: string;
+          data: string;
+        };
+        tool_use_id?: string;
+        content?: string;
+        id?: string;
+        name?: string;
+        input?: any;
+      }>;
 }
 
 interface ClaudeRequest {
@@ -118,15 +123,6 @@ interface ClaudeStreamResponse {
   usage?: {
     output_tokens: number;
   };
-}
-
-interface ClaudeModelsResponse {
-  data: Array<{
-    id: string;
-    type: "model";
-    display_name: string;
-    created_at: string;
-  }>;
 }
 
 export class ClaudeProvider extends AbstractProvider {
@@ -257,6 +253,10 @@ export class ClaudeProvider extends AbstractProvider {
           json: true,
           maxTemperature: 1,
           maxTopP: 1,
+          contextLength: this.getModelContextLength(modelId),
+          maxTokens: this.getModelMaxTokens(modelId),
+          multimodal: true,
+          reasoning: modelId.includes("opus") || modelId.includes("sonnet"),
         },
         status: "active" as const,
       };
