@@ -170,7 +170,7 @@ export class TokenCounter {
     type: "input" | "output" = "input"
   ): number {
     const pricing = this.getModelPricing(model, provider);
-    if (!pricing) return 0;
+    if (!pricing) return 0; // Return 0 for unknown models
 
     const price = type === "input" ? pricing.inputPrice : pricing.outputPrice;
     const unit = pricing.unit;
@@ -221,48 +221,56 @@ export class TokenCounter {
     finalTokenCount: number;
   } {
     const limit = this.getModelTokenLimit(model) - maxTokens;
-    const truncatedMessages: Message[] = [];
-    const removedMessages: Message[] = [];
+    const result: Message[] = [];
+    const removed: Message[] = [];
 
-    // Always keep system message first
-    const systemMessage = messages.find((m) => m.role === "system");
-    if (systemMessage) {
-      truncatedMessages.push(systemMessage);
-    }
+    // Separate system and non-system messages
+    const systemMessages = messages.filter((m) => m.role === "system");
+    const nonSystemMessages = messages.filter((m) => m.role !== "system");
 
-    // Add messages from most recent backwards until limit
-    const nonSystemMessages = messages
-      .filter((m) => m.role !== "system")
-      .reverse();
+    // Always include system messages first
+    result.push(...systemMessages);
 
-    for (const message of nonSystemMessages) {
-      const testMessages = [
-        systemMessage,
-        ...truncatedMessages,
-        message,
-      ].filter(Boolean) as Message[];
-      const tokenCount = this.countConversationTokens(
-        testMessages,
+    // Add non-system messages from most recent until we hit the limit
+    for (let i = nonSystemMessages.length - 1; i >= 0; i--) {
+      const message = nonSystemMessages[i];
+      const testMessages = [...result, message];
+      const testTokenCount = this.countConversationTokens(
+        testMessages.filter((m): m is Message => m !== undefined),
         options
       ).tokens;
 
-      if (tokenCount <= limit) {
-        truncatedMessages.unshift(message);
+      if (testTokenCount <= limit) {
+        result.push(message as Message);
       } else {
-        removedMessages.unshift(message);
+        // Add all remaining messages to removed
+        for (let j = 0; j <= i; j++) {
+          removed.unshift(nonSystemMessages[j] as Message);
+        }
+        break;
       }
     }
 
+    // Sort non-system messages back to original order
+    const finalSystemMessages = result.filter((m) => m.role === "system");
+    const finalNonSystemMessages = result.filter((m) => m.role !== "system");
+
+    // Sort by original index
+    finalNonSystemMessages.sort((a, b) => {
+      const indexA = messages.indexOf(a);
+      const indexB = messages.indexOf(b);
+      return indexA - indexB;
+    });
+
+    const finalMessages = [...finalSystemMessages, ...finalNonSystemMessages];
     const finalTokenCount = this.countConversationTokens(
-      systemMessage ? [systemMessage, ...truncatedMessages] : truncatedMessages,
+      finalMessages,
       options
     ).tokens;
 
     return {
-      truncatedMessages: systemMessage
-        ? [systemMessage, ...truncatedMessages]
-        : truncatedMessages,
-      removedMessages,
+      truncatedMessages: finalMessages,
+      removedMessages: removed,
       finalTokenCount,
     };
   }
@@ -369,18 +377,47 @@ export class TokenCounter {
     outputPrice: number;
     unit: number;
   } | null {
-    // Simplified pricing structure
-    const pricing: Record<
-      ProviderName,
-      { inputPrice: number; outputPrice: number; unit: number }
+    // Model-specific pricing structure
+    const modelPricing: Partial<
+      Record<
+        ModelName,
+        { inputPrice: number; outputPrice: number; unit: number }
+      >
     > = {
-      openai: { inputPrice: 0.0015, outputPrice: 0.002, unit: 1000 },
-      claude: { inputPrice: 3, outputPrice: 15, unit: 1000000 },
-      groq: { inputPrice: 0.59, outputPrice: 0.79, unit: 1000000 },
-      grok: { inputPrice: 5, outputPrice: 15, unit: 1000000 },
+      "gpt-4": { inputPrice: 0.03, outputPrice: 0.06, unit: 1000 },
+      "gpt-4o": { inputPrice: 0.005, outputPrice: 0.015, unit: 1000 },
+      "gpt-4o-mini": { inputPrice: 0.00015, outputPrice: 0.0006, unit: 1000 },
+      "gpt-3.5-turbo": { inputPrice: 0.0005, outputPrice: 0.0015, unit: 1000 },
+      "claude-3-opus-20240229": {
+        inputPrice: 15,
+        outputPrice: 75,
+        unit: 1000000,
+      },
+      "claude-3-sonnet-20240229": {
+        inputPrice: 3,
+        outputPrice: 15,
+        unit: 1000000,
+      },
+      "claude-3-haiku-20240307": {
+        inputPrice: 0.25,
+        outputPrice: 1.25,
+        unit: 1000000,
+      },
+      "llama-3.1-8b-instant": {
+        inputPrice: 0.05,
+        outputPrice: 0.08,
+        unit: 1000000,
+      },
+      "llama-3.1-70b-versatile": {
+        inputPrice: 0.59,
+        outputPrice: 0.79,
+        unit: 1000000,
+      },
+      "grok-beta": { inputPrice: 5, outputPrice: 15, unit: 1000000 },
     };
 
-    return pricing[provider] || null;
+    // Return model-specific pricing or null if model not found
+    return modelPricing[model] || null;
   }
 }
 
@@ -422,9 +459,21 @@ export class TokenAnalyzer {
         index,
         role: message.role,
         tokens: count.tokens,
-        percentage: (count.tokens / total.tokens) * 100,
+        percentage: (count.tokens / total.tokens) * 100, // Calculate raw percentage first
       });
     });
+
+    // Normalize percentages to sum to exactly 100%
+    const totalPercentage = byMessage.reduce(
+      (sum, msg) => sum + msg.percentage,
+      0
+    );
+    if (totalPercentage > 0) {
+      byMessage.forEach((msg) => {
+        msg.percentage = (msg.percentage / totalPercentage) * 100;
+        msg.percentage = Math.round(msg.percentage * 100) / 100; // Round to 2 decimal places
+      });
+    }
 
     // Calculate efficiency (content tokens vs overhead)
     const contentTokens = total.tokens - messages.length * 5; // Rough overhead estimate
@@ -454,8 +503,9 @@ export class TokenAnalyzer {
   } {
     const current = TokenCounter.countConversationTokens(messages, options);
     const recommendations: string[] = [];
+    const canOptimize = current.tokens > targetTokens;
 
-    if (current.tokens > targetTokens) {
+    if (canOptimize) {
       const excess = current.tokens - targetTokens;
       recommendations.push(`Reduce content by ~${excess} tokens`);
 
@@ -481,7 +531,7 @@ export class TokenAnalyzer {
       currentTokens: current.tokens,
       targetTokens,
       recommendations,
-      canOptimize: current.tokens > targetTokens,
+      canOptimize,
     };
   }
 }

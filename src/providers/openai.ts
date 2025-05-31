@@ -290,6 +290,13 @@ export class OpenAIProvider extends AbstractProvider {
               json: true,
               maxTemperature: 2,
               maxTopP: 1,
+              contextLength: this.getModelContextLength(
+                model.id as OpenAIModel
+              ),
+              maxTokens: this.getModelMaxTokens(model.id as OpenAIModel),
+              multimodal:
+                model.id.includes("vision") || model.id.includes("4o"),
+              reasoning: model.id.includes("4o"),
             },
             status: "active" as const,
           };
@@ -313,7 +320,7 @@ export class OpenAIProvider extends AbstractProvider {
     const pricing = OpenAIProvider.MODEL_PRICING[model];
 
     if (!pricing) {
-      return super.estimateCost(request);
+      return 0;
     }
 
     const inputTokens = this.estimateTokens(
@@ -606,6 +613,19 @@ export class OpenAIProvider extends AbstractProvider {
         status,
         { originalError: data }
       );
+    }
+
+    // Handle network errors (no response received)
+    if (!error.response) {
+      if (error.code === "ENOTFOUND" || error.code === "ECONNREFUSED") {
+        return this.createError(
+          "network",
+          "NETWORK_ERROR",
+          "Network connection failed",
+          undefined,
+          { originalError: error.message }
+        );
+      }
     }
 
     return this.createError(
