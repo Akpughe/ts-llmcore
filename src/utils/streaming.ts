@@ -8,6 +8,7 @@ import type {
   StreamingChatResponse,
   StreamResponse,
   ProviderName,
+  ModelName,
   LLMCoreError,
 } from "../types/index";
 import { ResponseStandardizer } from "./response-standardizer";
@@ -167,12 +168,7 @@ export class StreamManager {
         // Create standardized error
         const llmError = ResponseStandardizer.standardizeError(
           streamError,
-          provider,
-          {
-            type: "streaming",
-            chunkIndex,
-            reconnectAttempts,
-          }
+          provider
         );
 
         this.options.errorCallback(llmError);
@@ -492,5 +488,53 @@ export class StreamUtils {
         yield chunk;
       }
     })();
+  }
+
+  private static createAbortController(): {
+    abort: () => void;
+    signal: {
+      aborted: boolean;
+      addEventListener: (type: string, listener: () => void) => void;
+      removeEventListener: (type: string, listener: () => void) => void;
+    };
+  } {
+    const controller = new AbortController();
+    return {
+      abort: () => controller.abort(),
+      signal: {
+        aborted: controller.signal.aborted,
+        addEventListener: (type: string, listener: () => void) => {
+          controller.signal.addEventListener(type, listener);
+        },
+        removeEventListener: (type: string, listener: () => void) => {
+          controller.signal.removeEventListener(type, listener);
+        },
+      },
+    };
+  }
+
+  private static createStreamMetadata(
+    provider: ProviderName,
+    model: ModelName
+  ): { requestId: string; model: ModelName; startTime: number } {
+    return {
+      requestId: `${provider}-${Date.now()}`,
+      model,
+      startTime: Date.now(),
+    };
+  }
+
+  private static handleStreamError(error: Error): never {
+    throw error;
+  }
+
+  private static async *processStream(
+    stream: AsyncGenerator<StreamingChatResponse>,
+    onChunk: (chunk: StreamingChatResponse) => void
+  ): AsyncGenerator<StreamingChatResponse> {
+    for await (const chunk of stream) {
+      onChunk(chunk);
+      yield chunk;
+    }
   }
 }

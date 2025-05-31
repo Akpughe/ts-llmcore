@@ -3,7 +3,7 @@
  */
 
 import { TokenCounter, TokenAnalyzer } from "../../utils/token-counter";
-import type { Message, ModelName, ProviderName } from "../../types/index";
+import type { Message, ModelName } from "../../types/index";
 
 describe("TokenCounter", () => {
   describe("countMessageTokens", () => {
@@ -185,7 +185,7 @@ describe("TokenCounter", () => {
     it("should detect when messages would exceed token limit", () => {
       const longMessages: Message[] = Array(100)
         .fill(0)
-        .map((_, i) => ({
+        .map(() => ({
           role: "user",
           content:
             "This is a very long message that should contribute to exceeding the token limit for testing purposes. ".repeat(

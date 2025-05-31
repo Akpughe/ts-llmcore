@@ -2,7 +2,7 @@
  * Claude Provider Adapter for LLMCore package
  */
 
-import axios, { type AxiosInstance } from "axios";
+import axios, { type AxiosInstance, type AxiosError } from "axios";
 import type {
   ChatRequest,
   ChatResponse,
@@ -34,7 +34,7 @@ interface ClaudeMessage {
         content?: string;
         id?: string;
         name?: string;
-        input?: any;
+        input?: Record<string, unknown>;
       }>;
 }
 
@@ -177,7 +177,7 @@ export class ClaudeProvider extends AbstractProvider {
       return this.convertResponse(response.data, request);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw this.handleAxiosError(error);
+        throw this.handleAxiosError(error as AxiosError);
       }
       throw this.handleError(error);
     }
@@ -225,7 +225,7 @@ export class ClaudeProvider extends AbstractProvider {
       };
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw this.handleAxiosError(error);
+        throw this.handleAxiosError(error as AxiosError);
       }
       throw this.handleError(error);
     }
@@ -234,7 +234,10 @@ export class ClaudeProvider extends AbstractProvider {
   async getModels(): Promise<ModelsResponse> {
     // Claude doesn't provide a public models endpoint, so we return our supported models
     const supportedModels = ClaudeProvider.SUPPORTED_MODELS.map((modelId) => {
-      const pricing = ClaudeProvider.MODEL_PRICING[modelId]!; // All supported models have pricing
+      const pricing = ClaudeProvider.MODEL_PRICING[modelId];
+      if (!pricing) {
+        throw new Error(`Missing pricing for model ${modelId}`);
+      }
       return {
         id: modelId,
         name: modelId,
@@ -390,13 +393,12 @@ export class ClaudeProvider extends AbstractProvider {
   }
 
   private async *createStreamingResponse(
-    stream: any,
+    stream: ReadableStream<Uint8Array>,
     request: ChatRequest
   ): AsyncGenerator<StreamingChatResponse> {
     const decoder = new TextDecoder();
     let buffer = "";
     let messageId = "";
-    let currentContent = "";
 
     for await (const chunk of stream) {
       buffer += decoder.decode(chunk, { stream: true });
@@ -415,8 +417,6 @@ export class ClaudeProvider extends AbstractProvider {
             }
 
             if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-              currentContent += parsed.delta.text;
-
               yield {
                 id: messageId,
                 provider: "claude",
@@ -469,7 +469,17 @@ export class ClaudeProvider extends AbstractProvider {
     }
   }
 
-  private calculateCost(usage: UsageMetrics, model: ClaudeModel) {
+  private calculateCost(
+    usage: UsageMetrics,
+    model: ClaudeModel
+  ):
+    | {
+        promptCost: number;
+        completionCost: number;
+        totalCost: number;
+        currency: string;
+      }
+    | undefined {
     const pricing = ClaudeProvider.MODEL_PRICING[model];
     if (!pricing) return undefined;
 
@@ -504,9 +514,11 @@ export class ClaudeProvider extends AbstractProvider {
     return maxTokens[model] || 4096;
   }
 
-  private handleAxiosError(error: any): LLMCoreError {
+  private handleAxiosError(error: AxiosError): LLMCoreError {
     const status = error.response?.status;
-    const data = error.response?.data;
+    const data = error.response?.data as {
+      error?: { message?: string; type?: string };
+    };
 
     if (status === 401) {
       return this.createError(

@@ -52,9 +52,10 @@ export class ConfigurationManager {
    */
   validateConfig(): ConfigValidationResult {
     const cacheKey = JSON.stringify(this.config);
+    const cachedResult = this.validationCache.get(cacheKey);
 
-    if (this.validationCache.has(cacheKey)) {
-      return this.validationCache.get(cacheKey)!;
+    if (cachedResult) {
+      return cachedResult;
     }
 
     const result: ConfigValidationResult = {
@@ -210,33 +211,25 @@ export class ConfigurationManager {
   /**
    * Get configuration for a specific provider
    */
-  getProviderConfig(provider: ProviderName): ProviderConfig {
+  getProviderConfig<T extends ProviderConfig>(provider: ProviderName): T {
     const config = this.config.providers[provider];
-
     if (!config) {
       throw this.createConfigError(
         "PROVIDER_NOT_CONFIGURED",
         `Provider ${provider} is not configured`
       );
     }
-
-    const validation = this.validateProviderConfig(provider, config);
-    if (!validation.isValid) {
-      throw this.createConfigError(
-        "INVALID_PROVIDER_CONFIG",
-        `Invalid configuration for provider ${provider}: ${validation.errors.join(
-          ", "
-        )}`
-      );
-    }
-
-    return config;
+    return config as T;
   }
 
   /**
    * Get retry configuration
    */
-  getRetryConfig() {
+  getRetryConfig(): {
+    maxAttempts: number;
+    backoffMultiplier: number;
+    maxDelay: number;
+  } {
     return {
       maxAttempts: this.config.globalSettings?.retries || 3,
       backoffMultiplier: 2, // Not configurable in current schema
@@ -249,7 +242,7 @@ export class ConfigurationManager {
   /**
    * Get fallback configuration
    */
-  getFallbackConfig() {
+  getFallbackConfig(): { enabled: boolean; providers: never[] } {
     return {
       enabled: this.config.features?.retries || false,
       providers: [], // Not directly supported in current schema

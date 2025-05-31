@@ -17,7 +17,7 @@ import type {
 
 export interface EnhancedResponseMetadata extends ResponseMetadata {
   // Original provider response
-  raw?: any;
+  raw?: unknown;
   // Processing time
   processingTime?: number;
   // Request timestamp
@@ -154,7 +154,10 @@ export class ResponseStandardizer {
   /**
    * Extract and standardize token usage information
    */
-  static standardizeUsage(usage: any, provider: ProviderName): UsageMetrics {
+  static standardizeUsage(
+    usage: Record<string, number | undefined>,
+    provider: ProviderName
+  ): UsageMetrics {
     const baseUsage: UsageMetrics = {
       promptTokens: 0,
       completionTokens: 0,
@@ -166,20 +169,21 @@ export class ResponseStandardizer {
       case "groq":
       case "grok":
         return {
-          promptTokens: usage.prompt_tokens || 0,
-          completionTokens: usage.completion_tokens || 0,
-          totalTokens: usage.total_tokens || 0,
-          ...(usage.processing_time && {
-            processingTime: usage.processing_time,
+          promptTokens: usage["prompt_tokens"] || 0,
+          completionTokens: usage["completion_tokens"] || 0,
+          totalTokens: usage["total_tokens"] || 0,
+          ...(usage["processing_time"] && {
+            processingTime: usage["processing_time"],
           }),
-          ...(usage.queue_time && { queueTime: usage.queue_time }),
+          ...(usage["queue_time"] && { queueTime: usage["queue_time"] }),
         };
 
       case "claude":
         return {
-          promptTokens: usage.input_tokens || 0,
-          completionTokens: usage.output_tokens || 0,
-          totalTokens: (usage.input_tokens || 0) + (usage.output_tokens || 0),
+          promptTokens: usage["input_tokens"] || 0,
+          completionTokens: usage["output_tokens"] || 0,
+          totalTokens:
+            (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
         };
 
       default:
@@ -191,9 +195,8 @@ export class ResponseStandardizer {
    * Standardize error responses
    */
   static standardizeError(
-    error: any,
-    provider: ProviderName,
-    _context?: any
+    error: Error & { response?: { status?: number; data?: unknown } },
+    provider: ProviderName
   ): LLMCoreError {
     const baseError: LLMCoreError = {
       name: "LLMCoreError",
