@@ -7,6 +7,9 @@ jest.mock("../../core/config");
 jest.mock("../../core/router");
 
 describe("LLMCore", () => {
+  let mockRouter: any;
+  let mockConfigManager: any;
+
   const validConfig: LLMCoreConfig = {
     providers: {
       openai: {
@@ -22,48 +25,84 @@ describe("LLMCore", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock ConfigurationManager
-    (ConfigurationManager as unknown as jest.Mock).mockImplementation(() => ({
-      validateConfig: jest.fn().mockReturnValue({
-        isValid: true,
-        errors: [],
-        validProviders: ["openai"],
-        warnings: [],
-      }),
-      getProviderConfig: jest.fn().mockReturnValue({ apiKey: "sk-test123" }),
-      getDefaultProvider: jest.fn().mockReturnValue("openai"),
-      getDefaultModel: jest.fn().mockReturnValue("gpt-4"),
-      getRetryConfig: jest.fn().mockReturnValue({
-        maxAttempts: 3,
-        backoffMultiplier: 2,
-        maxDelay: 10000,
-      }),
-      getTimeout: jest.fn().mockReturnValue(30000),
-      getFallbackConfig: jest
-        .fn()
-        .mockReturnValue({ enabled: true, providers: [] }),
-      updateProviderConfig: jest.fn(),
-      removeProviderConfig: jest.fn(),
-    }));
 
     // Mock ProviderRouter
-    (ProviderRouter as unknown as jest.Mock).mockImplementation(() => ({
+    mockRouter = {
       initialize: jest.fn().mockResolvedValue(undefined),
       chat: jest.fn().mockResolvedValue({
-        message: { role: "assistant", content: "Hello!" },
+        id: "test-id",
+        provider: "openai",
+        model: "gpt-4",
+        created: Date.now(),
+        message: { role: "assistant", content: "Test response" },
+        finishReason: "stop",
       }),
-      chatStream: jest
-        .fn()
-        .mockResolvedValue({ stream: {}, controller: { abort: jest.fn() } }),
-      getModels: jest.fn().mockResolvedValue([]),
-      estimateCost: jest.fn().mockResolvedValue(0.01),
+      chatStream: jest.fn().mockResolvedValue({
+        stream: async function* () {
+          yield { delta: { content: "Test" } };
+        },
+        controller: { abort: jest.fn() },
+      }),
+      getMetrics: jest.fn().mockReturnValue(new Map()),
       getAvailableProviders: jest.fn().mockReturnValue(["openai"]),
       isProviderAvailable: jest.fn().mockReturnValue(true),
       resetCircuitBreaker: jest.fn(),
-      runHealthChecks: jest.fn().mockResolvedValue(undefined),
-      shutdown: jest.fn().mockResolvedValue(undefined),
-      getMetrics: jest.fn().mockReturnValue(new Map()),
-    }));
+      destroy: jest.fn().mockResolvedValue(undefined),
+    };
+
+    (
+      ProviderRouter as jest.MockedClass<typeof ProviderRouter>
+    ).mockImplementation(() => mockRouter);
+
+    // Mock ConfigurationManager
+    mockConfigManager = {
+      validateConfig: jest.fn().mockReturnValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        validProviders: ["openai"],
+        invalidProviders: [],
+      }),
+      getProviderConfig: jest.fn().mockReturnValue({ apiKey: "test-key" }),
+      getDefaultProvider: jest.fn().mockReturnValue("openai"),
+      getDefaultModel: jest.fn().mockReturnValue("gpt-4"),
+      updateProviderConfig: jest.fn(),
+      removeProviderConfig: jest.fn(),
+      getRetryConfig: jest.fn().mockReturnValue({
+        maxAttempts: 3,
+        backoffMultiplier: 2,
+        maxDelay: 30000,
+      }),
+      getTimeout: jest.fn().mockReturnValue(30000),
+      getFallbackConfig: jest.fn().mockReturnValue({
+        enabled: false,
+        providers: [],
+      }),
+    };
+
+    (
+      ConfigurationManager as jest.MockedClass<typeof ConfigurationManager>
+    ).mockImplementation(() => mockConfigManager);
+  });
+
+  afterEach(async () => {
+    // Clear all Jest timers to prevent leaks
+    jest.clearAllTimers();
+    jest.useRealTimers();
+
+    // Cleanup LLMCore instance if it exists
+    if ((LLMCore as any).instance) {
+      try {
+        await (LLMCore as any).instance.shutdown();
+      } catch (error) {
+        console.warn("Error during LLMCore cleanup:", error);
+      }
+      (LLMCore as any).instance = null;
+    }
+
+    // Clear all mocks
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe("initialization", () => {
@@ -104,43 +143,31 @@ describe("LLMCore", () => {
     });
 
     it("should handle chat errors", async () => {
-      const mockError = new Error("Chat failed");
-      // Set up the spy before the test
-      const chatSpy = jest.spyOn(core["router"], "chat");
-      chatSpy.mockRejectedValue(mockError);
+      const error = new Error("Chat failed");
+      mockRouter.chat.mockRejectedValueOnce(error);
 
       try {
         await core.chat(mockMessages);
-        // If we reach here, the error wasn't thrown
-        fail("Expected an error to be thrown");
+        fail("Should have thrown an error");
       } catch (error: any) {
         // Check that we got the enhanced error
         expect(error.message).toBe("Chat failed");
         expect(error.provider).toBe("openai");
       }
-
-      // Clean up
-      chatSpy.mockRestore();
     });
 
     it("should handle streaming errors", async () => {
-      const mockError = new Error("Stream failed");
-      // Set up the spy before the test
-      const chatStreamSpy = jest.spyOn(core["router"], "chatStream");
-      chatStreamSpy.mockRejectedValue(mockError);
+      const error = new Error("Stream failed");
+      mockRouter.chatStream.mockRejectedValueOnce(error);
 
       try {
         await core.chatStream(mockMessages);
-        // If we reach here, the error wasn't thrown
-        fail("Expected an error to be thrown");
+        fail("Should have thrown an error");
       } catch (error: any) {
         // Check that we got the enhanced error
         expect(error.message).toBe("Stream failed");
         expect(error.provider).toBe("openai");
       }
-
-      // Clean up
-      chatStreamSpy.mockRestore();
     });
   });
 

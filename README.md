@@ -390,9 +390,29 @@ npm test
 # Run with coverage
 npm run test:coverage
 
+# Run tests for CI (with coverage)
+npm run test:ci
+
+# Upload coverage to Codecov (requires CODECOV_TOKEN)
+npm run coverage:upload
+
+# Run tests and upload coverage in one command
+npm run coverage:ci
+
 # Run specific test
 npm test -- providers/openai.test.ts
 ```
+
+### Coverage Reporting
+
+The project uses [Codecov](https://codecov.io) for coverage tracking with enhanced reliability:
+
+- **Rate Limit Protection**: Uses repository token to avoid anonymous upload limits
+- **Retry Logic**: Automatically retries failed uploads with exponential backoff
+- **CI Integration**: Seamless GitHub Actions integration
+- **Local Testing**: Upload coverage from local development
+
+For detailed coverage setup instructions, see [docs/CODECOV_SETUP.md](docs/CODECOV_SETUP.md).
 
 ## 📈 Performance
 

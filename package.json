@@ -39,7 +39,9 @@
     "validate:package": "node scripts/validate-package.js",
     "size-check": "size-limit",
     "release": "npm run build && npm publish",
-    "release:dry": "npm run build && npm publish --dry-run"
+    "release:dry": "npm run build && npm publish --dry-run",
+    "coverage:upload": "scripts/upload-coverage.sh",
+    "coverage:ci": "npm run test:ci && npm run coverage:upload"
   },
   "keywords": [
     "llm",

@@ -14,6 +14,27 @@ beforeEach(() => {
   global.console = originalConsole;
 });
 
+afterEach(() => {
+  // Clear all timers to prevent leaks
+  jest.clearAllTimers();
+  jest.useRealTimers();
+
+  // Clear all mocks
+  jest.clearAllMocks();
+
+  // Force garbage collection to prevent memory leaks (if available)
+  if (global.gc) {
+    global.gc();
+  }
+});
+
+afterAll(() => {
+  // Final cleanup - ensure all resources are released
+  jest.clearAllTimers();
+  jest.useRealTimers();
+  jest.restoreAllMocks();
+});
+
 // Global mocks for external dependencies
 jest.mock("axios");
 

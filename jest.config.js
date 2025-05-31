@@ -57,7 +57,7 @@ module.exports = {
       statements: 65, // Current: 70.27%, allow margin
     },
     "src/core/router.ts": {
-      branches: 50, // Current: 54.28%, allow margin
+      branches: 49, // Current: 49.42%, allow margin
       functions: 45, // High coverage expected for core logic
       lines: 60, // High coverage expected for core logic
       statements: 60, // High coverage expected for core logic

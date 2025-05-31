@@ -46,6 +46,7 @@ export class ProviderRouter {
   private metrics = new Map<ProviderName, ProviderMetrics>();
   private configManager: ConfigurationManager;
   private options: RouterOptions;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
 
   constructor(
     configManager: ConfigurationManager,
@@ -78,6 +79,8 @@ export class ProviderRouter {
       );
     }
 
+    const initializationErrors: string[] = [];
+
     // Initialize each valid provider
     for (const providerName of validation.validProviders) {
       try {
@@ -90,16 +93,67 @@ export class ProviderRouter {
         this.providers.set(providerName, provider);
         this.initializeMetrics(providerName);
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        initializationErrors.push(`${providerName}: ${errorMessage}`);
+
         console.warn(`Failed to initialize provider ${providerName}:`, error);
+
+        // Add more details for debugging
+        if (error && typeof error === "object") {
+          if (
+            (error as any).code === "ENOTFOUND" ||
+            (error as any).code === "ECONNREFUSED"
+          ) {
+            console.error(
+              `Network error occurred during ${providerName} initialization:`,
+              {
+                code: (error as any).code,
+                hostname: (error as any).hostname,
+                port: (error as any).port,
+              }
+            );
+          } else if ((error as any).response) {
+            console.error(`HTTP error during ${providerName} initialization:`, {
+              status: (error as any).response.status,
+              statusText: (error as any).response.statusText,
+              data: (error as any).response.data,
+            });
+          } else if ((error as any).type === "authentication") {
+            console.error(`Authentication error for ${providerName}:`, {
+              message: errorMessage,
+              provider: providerName,
+            });
+          } else {
+            console.error(
+              `Unexpected error during ${providerName} initialization:`,
+              {
+                name: (error as any).name,
+                message: errorMessage,
+                stack: (error as any).stack?.split("\n").slice(0, 3).join("\n"), // First 3 lines of stack
+              }
+            );
+          }
+        }
       }
     }
 
     if (this.providers.size === 0) {
+      const errorDetails =
+        initializationErrors.length > 0
+          ? ` Errors: ${initializationErrors.join("; ")}`
+          : "";
       throw this.createRouterError(
         "NO_PROVIDERS_AVAILABLE",
-        "No providers could be initialized"
+        `No providers could be initialized.${errorDetails}`
       );
     }
+
+    console.info(
+      `Successfully initialized ${
+        this.providers.size
+      } provider(s): ${Array.from(this.providers.keys()).join(", ")}`
+    );
   }
 
   /**
@@ -208,6 +262,34 @@ export class ProviderRouter {
       metrics.failures = 0;
       delete metrics.lastFailure;
     }
+  }
+
+  /**
+   * Cleanup router resources and prevent memory leaks
+   */
+  async destroy(): Promise<void> {
+    // Clear all providers
+    for (const [name, provider] of this.providers) {
+      try {
+        // If provider has cleanup method, call it
+        if (typeof (provider as any).destroy === "function") {
+          await (provider as any).destroy();
+        }
+      } catch (error) {
+        console.warn(`Error cleaning up provider ${name}:`, error);
+      }
+    }
+
+    this.providers.clear();
+    this.metrics.clear();
+
+    // Clear any pending timers or intervals
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+
+    console.info("ProviderRouter cleanup completed");
   }
 
   private selectProvider(request: ChatRequest): BaseProvider | null {

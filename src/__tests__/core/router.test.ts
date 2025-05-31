@@ -112,6 +112,25 @@ describe("ProviderRouter", () => {
     });
   });
 
+  afterEach(async () => {
+    // Clear all Jest timers to prevent leaks
+    jest.clearAllTimers();
+    jest.useRealTimers();
+
+    // Cleanup router resources
+    if (router) {
+      try {
+        await router.destroy();
+      } catch (error) {
+        console.warn("Error during router cleanup:", error);
+      }
+    }
+
+    // Clear all mocks
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
   describe("initialization", () => {
     beforeEach(() => {
       // Reset all provider mocks
@@ -165,7 +184,7 @@ describe("ProviderRouter", () => {
       await expect(failingRouter.initialize()).rejects.toMatchObject({
         name: "LLMCoreError",
         code: "NO_PROVIDERS_AVAILABLE",
-        message: "No providers could be initialized",
+        message: expect.stringContaining("No providers could be initialized"),
       });
     });
   });
@@ -279,6 +298,9 @@ describe("ProviderRouter", () => {
     });
 
     it("should try fallback provider on failure", async () => {
+      // Use real timers for this test since it involves retry logic
+      jest.useRealTimers();
+
       // Create a retryable LLMCoreError (server error)
       const mockError = {
         name: "LLMCoreError",
@@ -307,6 +329,9 @@ describe("ProviderRouter", () => {
       expect(response.provider).toBe("claude");
       expect(OpenAIProvider.prototype.chat).toHaveBeenCalled();
       expect(ClaudeProvider.prototype.chat).toHaveBeenCalled();
+
+      // Restore fake timers for other tests
+      jest.useFakeTimers();
     });
 
     it("should not try fallback for non-retryable errors", async () => {

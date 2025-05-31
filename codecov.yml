@@ -1,0 +1,54 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 25%
+        threshold: 2%
+        if_not_found: success
+    patch:
+      default:
+        target: 20%
+        threshold: 5%
+        if_not_found: success
+
+  ignore:
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+    - "**/__tests__/**"
+    - "**/__mocks__/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/coverage/**"
+    - "src/types/**"
+    - "*.d.ts"
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes
+
+github_checks:
+  annotations: true
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+component_management:
+  default_rules:
+    flag_regexes:
+      - /core/
+      - /providers/
+      - /utils/
+
+codecov:
+  max_report_age: "24h"
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
