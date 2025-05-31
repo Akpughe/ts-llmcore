@@ -154,6 +154,16 @@ export abstract class AbstractProvider implements BaseProvider {
   }
 
   protected handleError(error: unknown): never {
+    // If it's already an LLMCoreError, re-throw it as is
+    if (
+      error &&
+      typeof error === "object" &&
+      "name" in error &&
+      (error as any).name === "LLMCoreError"
+    ) {
+      throw error;
+    }
+
     if (error instanceof Error) {
       throw this.createError(
         "unknown",
