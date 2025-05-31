@@ -260,6 +260,10 @@ export class GroqProvider extends AbstractProvider {
               json: true,
               maxTemperature: 2,
               maxTopP: 1,
+              contextLength: this.getModelContextLength(model.id as GroqModel),
+              maxTokens: this.getModelMaxTokens(model.id as GroqModel),
+              multimodal: false,
+              reasoning: model.id.includes("70b"),
             },
             status: "active" as const,
           };

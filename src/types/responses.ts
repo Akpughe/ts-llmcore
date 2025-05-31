@@ -2,13 +2,7 @@
  * Response type definitions for LLMCore package
  */
 
-import type {
-  ProviderName,
-  ModelName,
-  FinishReason,
-  Message,
-  ToolCall,
-} from "./index";
+import type { ProviderName, ModelName, FinishReason, Message } from "./index";
 import type { ModelCapabilities } from "../utils/model-capabilities";
 
 // Base response interface

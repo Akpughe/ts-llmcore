@@ -455,83 +455,83 @@ export class CostCalculator {
     return 0; // No discount
   }
 
-  private static getCheaperModels(
-    currentModel: ModelName,
-    provider: ProviderName
-  ): ModelName[] {
-    const pricing = this.PRICING_DATA[provider];
-    if (!pricing) return [];
+  // private static getCheaperModels(
+  //   currentModel: ModelName,
+  //   provider: ProviderName
+  // ): ModelName[] {
+  //   const pricing = this.PRICING_DATA[provider];
+  //   if (!pricing) return [];
 
-    const currentPricing = pricing[currentModel] || pricing["default"];
-    if (!currentPricing) return [];
+  //   const currentPricing = pricing[currentModel] || pricing["default"];
+  //   if (!currentPricing) return [];
 
-    return Object.keys(pricing)
-      .filter((model) => model !== "default" && model !== currentModel)
-      .filter((model) => {
-        const modelPricing = pricing[model];
-        if (!modelPricing) return false;
+  //   return Object.keys(pricing)
+  //     .filter((model) => model !== "default" && model !== currentModel)
+  //     .filter((model) => {
+  //       const modelPricing = pricing[model];
+  //       if (!modelPricing) return false;
 
-        return (
-          modelPricing.input < currentPricing.input &&
-          modelPricing.output < currentPricing.output
-        );
-      }) as ModelName[];
-  }
+  //       return (
+  //         modelPricing.input < currentPricing.input &&
+  //         modelPricing.output < currentPricing.output
+  //       );
+  //     }) as ModelName[];
+  // }
 
-  private static findCheaperModels(
-    currentModel: ModelName,
-    provider: ProviderName
-  ): ModelName[] {
-    // Use a sample usage to compare costs
-    const sampleUsage: UsageMetrics = {
-      promptTokens: 1000000,
-      completionTokens: 1000000,
-      totalTokens: 2000000,
-    };
+  // private static findCheaperModels(
+  //   currentModel: ModelName,
+  //   provider: ProviderName
+  // ): ModelName[] {
+  //   // Use a sample usage to compare costs
+  //   const sampleUsage: UsageMetrics = {
+  //     promptTokens: 1000000,
+  //     completionTokens: 1000000,
+  //     totalTokens: 2000000,
+  //   };
 
-    const currentPricing = CostCalculator.calculateCost(
-      sampleUsage,
-      currentModel,
-      provider
-    );
+  //   const currentPricing = CostCalculator.calculateCost(
+  //     sampleUsage,
+  //     currentModel,
+  //     provider
+  //   );
 
-    // Get all known models for this provider
-    const knownModels: ModelName[] = this.getKnownModels(provider);
+  //   // Get all known models for this provider
+  //   const knownModels: ModelName[] = this.getKnownModels(provider);
 
-    return knownModels
-      .filter((model) => model !== currentModel)
-      .filter((model) => {
-        const modelPricing = CostCalculator.calculateCost(
-          sampleUsage,
-          model,
-          provider
-        );
+  //   return knownModels
+  //     .filter((model) => model !== currentModel)
+  //     .filter((model) => {
+  //       const modelPricing = CostCalculator.calculateCost(
+  //         sampleUsage,
+  //         model,
+  //         provider
+  //       );
 
-        return (
-          modelPricing.inputCost < currentPricing.inputCost &&
-          modelPricing.outputCost < currentPricing.outputCost
-        );
-      });
-  }
+  //       return (
+  //         modelPricing.inputCost < currentPricing.inputCost &&
+  //         modelPricing.outputCost < currentPricing.outputCost
+  //       );
+  //     });
+  // }
 
-  private static getKnownModels(provider: ProviderName): ModelName[] {
-    switch (provider) {
-      case "openai":
-        return ["gpt-4", "gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"];
-      case "claude":
-        return [
-          "claude-3-opus-20240229",
-          "claude-3-sonnet-20240229",
-          "claude-3-haiku-20240307",
-        ];
-      case "groq":
-        return ["llama-3.1-8b-instant", "llama-3.1-70b-versatile"];
-      case "grok":
-        return ["grok-beta", "grok-vision-beta"];
-      default:
-        return [];
-    }
-  }
+  // private static getKnownModels(provider: ProviderName): ModelName[] {
+  //   switch (provider) {
+  //     case "openai":
+  //       return ["gpt-4", "gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"];
+  //     case "claude":
+  //       return [
+  //         "claude-3-opus-20240229",
+  //         "claude-3-sonnet-20240229",
+  //         "claude-3-haiku-20240307",
+  //       ];
+  //     case "groq":
+  //       return ["llama-3.1-8b-instant", "llama-3.1-70b-versatile"];
+  //     case "grok":
+  //       return ["grok-beta", "grok-vision-beta"];
+  //     default:
+  //       return [];
+  //   }
+  // }
 }
 
 /**

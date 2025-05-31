@@ -146,7 +146,7 @@ export class TokenCounter {
 
       // Estimate tokens with tool overhead
       let tokens = this.estimateTokens(toolText, provider);
-      tokens += this.getToolOverhead(provider);
+      tokens += this.getToolOverhead();
 
       totalTokens += tokens;
       totalCharacters += characters;
@@ -166,10 +166,9 @@ export class TokenCounter {
   static estimateCost(
     tokenCount: number,
     model: ModelName,
-    provider: ProviderName,
     type: "input" | "output" = "input"
   ): number {
-    const pricing = this.getModelPricing(model, provider);
+    const pricing = this.getModelPricing(model);
     if (!pricing) return 0; // Return 0 for unknown models
 
     const price = type === "input" ? pricing.inputPrice : pricing.outputPrice;
@@ -340,15 +339,9 @@ export class TokenCounter {
     }
   }
 
-  private static getToolOverhead(provider: ProviderName): number {
-    switch (provider) {
-      case "openai":
-        return 15; // OpenAI function calling overhead
-      case "claude":
-        return 20; // Claude tool use overhead
-      default:
-        return 25; // Conservative estimate
-    }
+  private static getToolOverhead(): number {
+    // Default overhead values for tools
+    return 20; // Conservative estimate for all providers
   }
 
   private static getModelTokenLimit(model: ModelName): number {
@@ -369,10 +362,7 @@ export class TokenCounter {
     return limits[model] || 4096; // Default fallback
   }
 
-  private static getModelPricing(
-    model: ModelName,
-    provider: ProviderName
-  ): {
+  private static getModelPricing(model: ModelName): {
     inputPrice: number;
     outputPrice: number;
     unit: number;
@@ -492,7 +482,7 @@ export class TokenAnalyzer {
    */
   static getRecommendations(
     messages: Message[],
-    model: ModelName,
+    _model: ModelName,
     targetTokens: number,
     options: TokenCountOptions = {}
   ): {

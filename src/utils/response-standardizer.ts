@@ -193,7 +193,7 @@ export class ResponseStandardizer {
   static standardizeError(
     error: any,
     provider: ProviderName,
-    context?: any
+    _context?: any
   ): LLMCoreError {
     const baseError: LLMCoreError = {
       name: "LLMCoreError",
@@ -445,7 +445,7 @@ export class ResponseStandardizer {
   }
 
   // Helper methods
-  private static getModelPricing(model: ModelName, provider: ProviderName) {
+  private static getModelPricing(_model: ModelName, provider: ProviderName) {
     // Simplified pricing - in real implementation, this would be more comprehensive
     const pricing: Record<
       ProviderName,
