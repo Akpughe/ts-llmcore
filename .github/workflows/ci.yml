@@ -126,7 +126,7 @@ jobs:
           cd /tmp
           npm init -y
           npm install $GITHUB_WORKSPACE/*.tgz
-          node -e "require('@davak/llm-core')"
+          node -e "require('llm-core')"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
