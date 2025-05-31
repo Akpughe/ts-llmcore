@@ -1,22 +1,25 @@
-# LLMCore - Unified LLM Provider Interface
+# LLMCore 🚀
 
-![Version](https://img.shields.io/npm/v/llm-core)
-![License](https://img.shields.io/npm/l/llm-core)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+**A unified TypeScript/JavaScript package providing a single interface for multiple LLM providers**
 
-A unified, type-safe TypeScript/JavaScript package for interacting with multiple Large Language Model (LLM) providers including OpenAI, Claude (Anthropic), Groq, and Grok.
+[![npm version](https://badge.fury.io/js/llm-core.svg)](https://badge.fury.io/js/llm-core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/Akpughe/ts-llmcore/workflows/CI/badge.svg)](https://github.com/Akpughe/ts-llmcore/actions)
+[![Coverage Status](https://codecov.io/gh/Akpughe/ts-llmcore/branch/main/graph/badge.svg)](https://codecov.io/gh/Akpughe/ts-llmcore)
 
-## 🌟 Features
+Eliminate vendor lock-in and simplify your AI integrations with support for **OpenAI**, **Claude**, **Groq**, **Grok**, and more providers through a single, consistent API.
 
-- **🔄 Unified Interface**: Single API for multiple LLM providers
-- **📡 Streaming Support**: Real-time response streaming with robust error handling
-- **💰 Cost Tracking**: Built-in token usage and cost estimation
-- **🛡️ Type Safety**: Full TypeScript support with comprehensive type definitions
-- **⚡ Rate Limiting**: Intelligent rate limiting and retry mechanisms
-- **🔧 Provider Switching**: Easy fallback and load balancing between providers
-- **📊 Analytics**: Built-in usage analytics and performance monitoring
-- **🎛️ Tool Support**: Function/tool calling across compatible providers
-- **📝 Rich Configuration**: Flexible configuration with validation
+## ✨ Key Features
+
+- 🔄 **No Vendor Lock-in**: Switch between providers with one line of code
+- 💰 **Cost Optimization**: Built-in cost tracking and optimization across all providers
+- 🏎️ **Streaming Support**: Real-time responses from all providers with abort control
+- 🛠️ **Tool Calling**: Unified function calling interface across providers
+- 📊 **Type Safety**: Full TypeScript support with comprehensive type definitions
+- 🔍 **Token Management**: Automatic token counting and conversation management
+- ⚡ **Performance**: Optimized HTTP clients with connection pooling
+- 🛡️ **Reliability**: Comprehensive error handling and automatic retries
 
 ## 🚀 Quick Start
 
@@ -24,10 +27,6 @@ A unified, type-safe TypeScript/JavaScript package for interacting with multiple
 
 ```bash
 npm install llm-core
-# or
-yarn add llm-core
-# or
-pnpm add llm-core
 ```
 
 ### Basic Usage
@@ -35,139 +34,76 @@ pnpm add llm-core
 ```typescript
 import { LLMCore } from "llm-core";
 
-// Initialize with your API keys
+// Initialize with your preferred provider
 const llm = new LLMCore({
-  providers: {
-    openai: {
-      provider: "openai",
-      apiKey: process.env.OPENAI_API_KEY,
-    },
-    claude: {
-      provider: "claude",
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    },
-  },
-  defaultProvider: "openai",
+  provider: "openai",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Make your first request
+// Simple chat completion
 const response = await llm.chat({
-  provider: "openai",
-  model: "gpt-4",
-  messages: [{ role: "user", content: "Hello, world!" }],
-});
-
-console.log(response.message.content);
-```
-
-## 📚 Documentation
-
-### Configuration
-
-#### Basic Configuration
-
-```typescript
-import { LLMCore, type LLMCoreConfig } from "llm-core";
-
-const config: LLMCoreConfig = {
-  providers: {
-    openai: {
-      provider: "openai",
-      apiKey: process.env.OPENAI_API_KEY,
-      baseURL: "https://api.openai.com/v1", // optional
-      timeout: 30000, // optional
-    },
-    claude: {
-      provider: "claude",
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      version: "2023-06-01", // optional
-    },
-    groq: {
-      provider: "groq",
-      apiKey: process.env.GROQ_API_KEY,
-    },
-    grok: {
-      provider: "grok",
-      apiKey: process.env.GROK_API_KEY,
-    },
-  },
-  defaultProvider: "openai",
-  features: {
-    streaming: true,
-    caching: false,
-    retries: true,
-    analytics: true,
-    rateLimiting: true,
-  },
-  retryConfig: {
-    maxRetries: 3,
-    baseDelay: 1000,
-    maxDelay: 10000,
-    backoffMultiplier: 2,
-  },
-};
-
-const llm = new LLMCore(config);
-```
-
-### Core Methods
-
-#### Chat Completion
-
-```typescript
-const response = await llm.chat({
-  provider: "openai",
-  model: "gpt-4",
+  model: "gpt-4o",
   messages: [
-    { role: "system", content: "You are a helpful assistant." },
-    { role: "user", content: "Explain quantum computing in simple terms." },
+    { role: "user", content: "Explain quantum computing in simple terms" },
   ],
-  maxTokens: 500,
-  temperature: 0.7,
 });
 
 console.log(response.message.content);
-console.log(`Cost: $${response.cost?.totalCost.toFixed(4)}`);
-console.log(`Tokens used: ${response.usage?.totalTokens}`);
 ```
 
-#### Streaming Responses
+### Provider Switching
+
+Switch providers instantly without changing your code:
+
+```typescript
+// Start with OpenAI
+const openaiLLM = new LLMCore({
+  provider: "openai",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Switch to Claude for better reasoning
+const claudeLLM = new LLMCore({
+  provider: "claude",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// Switch to Groq for ultra-fast inference
+const groqLLM = new LLMCore({
+  provider: "groq",
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// All use the same interface!
+const request = {
+  model: "claude-3-sonnet-20240229", // or 'gpt-4o', 'llama-3.1-70b-versatile'
+  messages: [{ role: "user", content: "Hello!" }],
+};
+```
+
+## 📖 Comprehensive Examples
+
+### Streaming Responses
 
 ```typescript
 const streamResponse = await llm.chatStream({
-  provider: "claude",
-  model: "claude-3-sonnet-20240229",
-  messages: [
-    { role: "user", content: "Write a short story about space exploration." },
-  ],
-  maxTokens: 1000,
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Write a short story about AI" }],
 });
 
-// Process streaming chunks
 for await (const chunk of streamResponse.stream) {
   if (chunk.delta.content) {
     process.stdout.write(chunk.delta.content);
   }
-
-  if (chunk.isComplete) {
-    console.log("\n\nStream completed!");
-    break;
-  }
 }
-
-// Cancel stream if needed
-streamResponse.controller.abort();
 ```
 
-#### Function/Tool Calling
+### Function Calling / Tool Usage
 
 ```typescript
 const response = await llm.chat({
-  provider: "openai",
-  model: "gpt-4",
-  messages: [
-    { role: "user", content: "What's the weather like in San Francisco?" },
-  ],
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "What's the weather like in Tokyo?" }],
   tools: [
     {
       type: "function",
@@ -177,394 +113,293 @@ const response = await llm.chat({
         parameters: {
           type: "object",
           properties: {
-            location: {
-              type: "string",
-              description: "City and state, e.g. San Francisco, CA",
-            },
+            location: { type: "string" },
           },
           required: ["location"],
         },
       },
     },
   ],
-  toolChoice: "auto",
 });
 
 if (response.message.toolCalls) {
   for (const toolCall of response.message.toolCalls) {
-    console.log(`Called: ${toolCall.function.name}`);
+    console.log(`Function called: ${toolCall.function.name}`);
     console.log(`Arguments: ${toolCall.function.arguments}`);
   }
 }
 ```
 
-### Provider-Specific Usage
-
-#### OpenAI
+### Cost Tracking and Token Management
 
 ```typescript
-import { OpenAIProvider } from "llm-core";
+import { TokenCounter, CostCalculator } from "llm-core";
 
-const openai = new OpenAIProvider({
-  provider: "openai",
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const response = await openai.chat({
-  provider: "openai",
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }],
-  maxTokens: 100,
-});
-```
-
-#### Claude (Anthropic)
-
-```typescript
-import { ClaudeProvider } from "llm-core";
-
-const claude = new ClaudeProvider({
-  provider: "claude",
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const response = await claude.chat({
-  provider: "claude",
-  model: "claude-3-sonnet-20240229",
-  messages: [{ role: "user", content: "Explain machine learning" }],
-  maxTokens: 500,
-});
-```
-
-### Utilities
-
-#### Cost Estimation
-
-```typescript
-import { CostCalculator } from "llm-core";
-
-// Estimate cost before making request
-const estimate = CostCalculator.estimateCost(
-  messages,
-  "gpt-4",
-  "openai",
-  500 // expected output tokens
-);
-
-console.log(`Estimated cost: $${estimate.estimated.totalCost.toFixed(4)}`);
-console.log(`Confidence: ${estimate.confidence}`);
-
-// Compare costs across providers
-const comparison = CostCalculator.compareCosts(usage, "gpt-4", [
-  "openai",
-  "claude",
-  "groq",
-]);
-
-console.log("Cost comparison:", comparison);
-```
-
-#### Token Counting
-
-```typescript
-import { TokenCounter } from "llm-core";
-
+// Count tokens before sending
 const tokenCount = TokenCounter.countConversationTokens(messages, {
   provider: "openai",
-  model: "gpt-4",
+  model: "gpt-4o",
 });
 
-console.log(`Total tokens: ${tokenCount.tokens}`);
+console.log(`Estimated tokens: ${tokenCount.tokens}`);
 console.log(
-  `Estimated cost: $${TokenCounter.estimateCost(
-    tokenCount.tokens,
-    "gpt-4",
-    "openai"
-  )}`
+  `Estimated cost: $${TokenCounter.estimateCost(tokenCount.tokens, "gpt-4o")}`
 );
 
-// Check if within limits
-const limitCheck = TokenCounter.wouldExceedLimit(
-  messages,
-  "gpt-4",
-  1000 // max tokens for response
-);
-
-if (limitCheck.wouldExceed) {
-  const truncated = TokenCounter.truncateToLimit(messages, "gpt-4", 1000);
-  console.log(`Removed ${truncated.removedMessages.length} messages`);
+// Get cost information from response
+const response = await llm.chat({ model: "gpt-4o", messages });
+if (response.cost) {
+  console.log(`Actual cost: $${response.cost.totalCost}`);
 }
 ```
 
-#### Streaming Utilities
-
-```typescript
-import { StreamUtils } from "llm-core";
-
-// Convert stream to string
-const content = await StreamUtils.streamToString(streamResponse.stream);
-
-// Transform stream chunks
-const transformedStream = StreamUtils.transformStream(
-  streamResponse.stream,
-  (chunk, index) => ({
-    ...chunk,
-    index,
-    timestamp: Date.now(),
-  })
-);
-
-// Monitor stream performance
-const monitoredStream = StreamUtils.monitorStream(
-  streamResponse.stream,
-  (metrics) => {
-    console.log(
-      `Chunks: ${metrics.chunksReceived}, Latency: ${metrics.avgLatency}ms`
-    );
-  }
-);
-```
-
-## 🔧 Advanced Features
-
-### Provider Fallback
+### Advanced Configuration
 
 ```typescript
 const llm = new LLMCore({
-  providers: {
-    primary: { provider: "openai", apiKey: "key1" },
-    fallback: { provider: "claude", apiKey: "key2" },
+  provider: "openai",
+  apiKey: process.env.OPENAI_API_KEY,
+
+  // Global configuration
+  timeout: 30000,
+  retries: 3,
+
+  // Cost tracking
+  costTracking: {
+    enabled: true,
+    currency: "USD",
   },
-  defaultProvider: "primary",
-  features: {
-    retries: true,
-    // Auto-fallback on provider errors
+
+  // Rate limiting
+  rateLimiting: {
+    enabled: true,
+    requestsPerMinute: 60,
+  },
+
+  // Analytics
+  analytics: {
+    enabled: true,
+    trackTokenUsage: true,
+    trackCosts: true,
   },
 });
 ```
 
-### Rate Limiting
+## 🔌 Supported Providers
+
+| Provider   | Models                         | Streaming | Tools | Vision |
+| ---------- | ------------------------------ | --------- | ----- | ------ |
+| **OpenAI** | GPT-4o, GPT-4, GPT-3.5-turbo   | ✅        | ✅    | ✅     |
+| **Claude** | Claude 3.5 Sonnet, Opus, Haiku | ✅        | ✅    | ✅     |
+| **Groq**   | Llama 3.1, Mixtral, Gemma      | ✅        | ✅    | ❌     |
+| **Grok**   | grok-beta, grok-vision-beta    | ✅        | ✅    | ✅     |
+
+### Model Support
+
+#### OpenAI Models
+
+- `gpt-4o`, `gpt-4o-mini`, `gpt-4o-2024-05-13`
+- `gpt-4`, `gpt-4-32k`, `gpt-4-turbo`
+- `gpt-3.5-turbo`, `gpt-3.5-turbo-16k`
+
+#### Claude Models
+
+- `claude-3-5-sonnet-20241022` (Latest)
+- `claude-3-opus-20240229`
+- `claude-3-sonnet-20240229`
+- `claude-3-haiku-20240307`
+
+#### Groq Models
+
+- `llama-3.1-70b-versatile`, `llama-3.1-8b-instant`
+- `mixtral-8x7b-32768`
+- `gemma-7b-it`, `gemma2-9b-it`
+
+#### Grok Models
+
+- `grok-beta`, `grok-vision-beta`
+
+## 🛠️ Advanced Features
+
+### Provider Health Monitoring
 
 ```typescript
-import { RateLimiter } from "llm-core";
-
-const rateLimiter = new RateLimiter();
-
-// Check rate limits before making requests
-const allowed = rateLimiter.checkLimit("openai", 1000); // 1000 tokens
-
-if (allowed.allowed) {
-  // Make request
-} else {
-  console.log(`Rate limited. Retry after: ${allowed.retryAfter}s`);
-}
+const health = await llm.healthCheck();
+console.log(`Provider status: ${health.status}`);
+console.log(`Latency: ${health.latency}ms`);
 ```
 
-### Analytics
+### Model Capabilities Detection
 
 ```typescript
-// Get usage statistics
-const stats = llm.getAnalytics().getUsageStats("day");
+import { ModelCapabilityDetector } from "llm-core";
 
-console.log(`Total requests: ${stats.totalRequests}`);
-console.log(`Total cost: $${stats.totalCost.toFixed(4)}`);
-console.log(`Success rate: ${(stats.successRate * 100).toFixed(1)}%`);
-console.log(`Top provider: ${stats.topProviders[0]?.provider}`);
+const capabilities = ModelCapabilityDetector.getCapabilities("gpt-4o");
+console.log(`Supports streaming: ${capabilities.streaming}`);
+console.log(`Supports tools: ${capabilities.tools}`);
+console.log(`Max context: ${capabilities.contextLength} tokens`);
 ```
 
-## 📖 Examples
-
-### Chat Application
+### Response Standardization
 
 ```typescript
-import { LLMCore } from "llm-core";
+import { ResponseStandardizer } from "llm-core";
 
-class ChatBot {
-  private llm: LLMCore;
-  private conversation: Array<{ role: string; content: string }> = [];
+const standardized = ResponseStandardizer.standardize(response, {
+  includeRaw: true,
+  calculateCost: true,
+});
 
-  constructor() {
-    this.llm = new LLMCore({
-      providers: {
-        openai: {
-          provider: "openai",
-          apiKey: process.env.OPENAI_API_KEY,
-        },
-      },
-      defaultProvider: "openai",
-    });
-  }
-
-  async chat(userMessage: string): Promise<string> {
-    this.conversation.push({ role: "user", content: userMessage });
-
-    const response = await this.llm.chat({
-      provider: "openai",
-      model: "gpt-4",
-      messages: this.conversation,
-      maxTokens: 500,
-    });
-
-    this.conversation.push({
-      role: "assistant",
-      content: response.message.content,
-    });
-
-    return response.message.content;
-  }
-}
-
-const bot = new ChatBot();
-const response = await bot.chat("Hello! How are you?");
-console.log(response);
+console.log("Enhanced metadata:", standardized.metadata);
 ```
 
-### Streaming Chat with Cancellation
+### Conversation Management
 
 ```typescript
-async function streamingChat(prompt: string) {
-  const llm = new LLMCore({
-    /* config */
-  });
+// Automatically manage conversation length
+const { truncatedMessages } = TokenCounter.truncateToLimit(
+  messages,
+  "gpt-4o",
+  4000 // Reserve tokens for response
+);
 
-  const streamResponse = await llm.chatStream({
-    provider: "claude",
-    model: "claude-3-sonnet-20240229",
-    messages: [{ role: "user", content: prompt }],
-    maxTokens: 1000,
-  });
-
-  let fullResponse = "";
-  const timeout = setTimeout(() => {
-    streamResponse.controller.abort();
-  }, 30000); // Cancel after 30 seconds
-
-  try {
-    for await (const chunk of streamResponse.stream) {
-      if (chunk.delta.content) {
-        fullResponse += chunk.delta.content;
-        process.stdout.write(chunk.delta.content);
-      }
-
-      if (chunk.isComplete) {
-        clearTimeout(timeout);
-        break;
-      }
-    }
-  } catch (error) {
-    if (error.name === "AbortError") {
-      console.log("\nStream was cancelled due to timeout");
-    }
-  }
-
-  return fullResponse;
-}
+const response = await llm.chat({
+  model: "gpt-4o",
+  messages: truncatedMessages,
+});
 ```
 
-### Cost Optimization
+## 📊 Error Handling
 
 ```typescript
-import { CostOptimizer, TokenCounter } from "llm-core";
+import { LLMCoreError } from "llm-core";
 
-async function optimizedChat(messages: Message[]) {
-  // Check if we need to optimize
-  const analysis = TokenCounter.wouldExceedLimit(messages, "gpt-4", 1000);
-
-  if (analysis.wouldExceed) {
-    // Truncate messages to fit
-    const truncated = TokenCounter.truncateToLimit(messages, "gpt-4", 1000);
-    messages = truncated.truncatedMessages;
-  }
-
-  // Get cost optimization suggestions
-  const suggestions = CostOptimizer.getOptimizationSuggestions(
-    {
-      promptTokens: analysis.currentTokens,
-      completionTokens: 500,
-      totalTokens: analysis.currentTokens + 500,
-    },
-    "gpt-4",
-    "openai"
-  );
-
-  if (suggestions.length > 0) {
-    console.log("Cost optimization suggestions:");
-    suggestions.forEach((s) =>
-      console.log(`- ${s.description} (Save $${s.potentialSavings.toFixed(4)})`)
-    );
-  }
-
-  // Make the request with cost tracking
+try {
   const response = await llm.chat({
-    provider: "openai",
-    model: "gpt-4",
-    messages,
+    model: "gpt-4o",
+    messages: [{ role: "user", content: "Hello!" }],
   });
-
-  console.log(`Actual cost: $${response.cost?.totalCost.toFixed(4)}`);
-  return response;
+} catch (error) {
+  if (error instanceof LLMCoreError) {
+    switch (error.type) {
+      case "authentication":
+        console.error("Invalid API key");
+        break;
+      case "rate_limit":
+        console.error("Rate limit exceeded, retrying...");
+        // Automatic retry logic
+        break;
+      case "server_error":
+        console.error("Provider server error");
+        break;
+      default:
+        console.error("Unknown error:", error.message);
+    }
+  }
 }
 ```
 
-## 🛠️ API Reference
+## 🔧 Configuration
 
-### Core Classes
+### Environment Variables
 
-- **`LLMCore`** - Main class for unified LLM interactions
-- **`OpenAIProvider`** - OpenAI-specific provider adapter
-- **`ClaudeProvider`** - Claude/Anthropic provider adapter
-- **`GroqProvider`** - Groq provider adapter
-- **`GrokProvider`** - Grok provider adapter
+```bash
+# Provider API Keys
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_claude_key
+GROQ_API_KEY=your_groq_key
+GROK_API_KEY=your_grok_key
 
-### Utility Classes
+# Optional Configuration
+LLM_CORE_TIMEOUT=30000
+LLM_CORE_RETRIES=3
+LLM_CORE_LOG_LEVEL=info
+```
 
-- **`TokenCounter`** - Token counting and conversation analysis
-- **`CostCalculator`** - Cost estimation and optimization
-- **`StreamUtils`** - Stream processing utilities
-- **`RateLimiter`** - Rate limiting functionality
-- **`AnalyticsTracker`** - Usage analytics and monitoring
-
-### Type Definitions
-
-All types are fully documented with TypeScript. Import them as needed:
+### Provider-Specific Configuration
 
 ```typescript
-import type {
-  ChatRequest,
-  ChatResponse,
-  StreamingChatResponse,
-  ModelCapabilities,
-  UsageMetrics,
-  CostMetrics,
-  LLMCoreConfig,
-} from "llm-core";
+// OpenAI with organization
+const openaiLLM = new LLMCore({
+  provider: "openai",
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: "org-123",
+  project: "proj-abc",
+});
+
+// Claude with custom base URL
+const claudeLLM = new LLMCore({
+  provider: "claude",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: "https://api.anthropic.com",
+});
+
+// Groq with custom timeout
+const groqLLM = new LLMCore({
+  provider: "groq",
+  apiKey: process.env.GROQ_API_KEY,
+  timeout: 10000, // Ultra-fast responses
+});
 ```
+
+## 📦 Package Information
+
+- **Bundle Size**: 26KB (minified + gzipped)
+- **Tree Shakeable**: ✅ Import only what you need
+- **TypeScript**: Full type definitions included
+- **Node.js**: >= 16.0.0 required
+- **Formats**: CommonJS and ESM
+
+### Installation Options
+
+```bash
+# npm
+npm install llm-core
+
+# yarn
+yarn add llm-core
+
+# pnpm
+pnpm add llm-core
+
+# bun
+bun add llm-core
+```
+
+### Peer Dependencies (Optional)
+
+Install provider SDKs for enhanced features:
+
+```bash
+npm install openai anthropic @groq/sdk
+```
+
+## 🔒 Security
+
+- API keys are handled securely and never logged
+- All requests use HTTPS with proper authentication
+- No sensitive data is stored or cached by default
+- Built-in rate limiting prevents abuse
 
 ## 🧪 Testing
 
-### Unit Tests
-
 ```bash
+# Run tests
 npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test
+npm test -- providers/openai.test.ts
 ```
 
-### Integration Tests
+## 📈 Performance
 
-Integration tests require API keys:
-
-```bash
-export OPENAI_API_KEY="your-key"
-export ANTHROPIC_API_KEY="your-key"
-export GROQ_API_KEY="your-key"
-
-npm run test:integration
-```
-
-### Test with Docker
-
-```bash
-docker run -e OPENAI_API_KEY="your-key" llm-core:test
-```
+- **Latency**: Optimized HTTP clients with connection pooling
+- **Memory**: Efficient streaming with backpressure handling
+- **Throughput**: Built-in rate limiting and request queuing
+- **Bundle Size**: Minimal footprint with tree shaking
 
 ## 🤝 Contributing
 
@@ -573,7 +408,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 
 ```bash
-git clone https://github.com/yourusername/llm-core.git
+git clone https://github.com/llmcore/llm-core.git
 cd llm-core
 npm install
 npm run dev
@@ -582,87 +417,41 @@ npm run dev
 ### Running Tests
 
 ```bash
-npm test                 # Unit tests
-npm run test:integration # Integration tests (requires API keys)
-npm run test:coverage    # Coverage report
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # With coverage
 ```
 
-## 📝 Migration Guide
+## 📝 Changelog
 
-### From OpenAI SDK
-
-```typescript
-// Before (OpenAI SDK)
-import OpenAI from "openai";
-const openai = new OpenAI({ apiKey: "your-key" });
-
-const response = await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [{ role: "user", content: "Hello" }],
-});
-
-// After (LLMCore)
-import { LLMCore } from "llm-core";
-const llm = new LLMCore({
-  providers: { openai: { provider: "openai", apiKey: "your-key" } },
-  defaultProvider: "openai",
-});
-
-const response = await llm.chat({
-  provider: "openai",
-  model: "gpt-4",
-  messages: [{ role: "user", content: "Hello" }],
-});
-```
-
-### From Anthropic SDK
-
-```typescript
-// Before (Anthropic SDK)
-import Anthropic from "@anthropic-ai/sdk";
-const anthropic = new Anthropic({ apiKey: "your-key" });
-
-const response = await anthropic.messages.create({
-  model: "claude-3-sonnet-20240229",
-  messages: [{ role: "user", content: "Hello" }],
-  max_tokens: 100,
-});
-
-// After (LLMCore)
-const response = await llm.chat({
-  provider: "claude",
-  model: "claude-3-sonnet-20240229",
-  messages: [{ role: "user", content: "Hello" }],
-  maxTokens: 100,
-});
-```
-
-## 🔒 Security
-
-- Store API keys securely (use environment variables)
-- Validate all inputs before processing
-- Use rate limiting to prevent abuse
-- Monitor usage and costs regularly
+See [CHANGELOG.md](CHANGELOG.md) for version history and migration guides.
 
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🔗 Links
 
-- 📖 [Documentation](https://llm-core-docs.com)
-- 💬 [Discord Community](https://discord.gg/llm-core)
-- 🐛 [Issue Tracker](https://github.com/yourusername/llm-core/issues)
-- 📧 [Email Support](mailto:support@llm-core.com)
+- [📚 Documentation](https://github.com/Akpughe/ts-llmcore#readme)
+- [🐛 Issues](https://github.com/Akpughe/ts-llmcore/issues)
+- [💬 Discussions](https://github.com/Akpughe/ts-llmcore/discussions)
+- [📦 npm Package](https://www.npmjs.com/package/llm-core)
 
-## 🙏 Acknowledgments
+## 🌟 Show Your Support
 
-- OpenAI for the GPT models
-- Anthropic for Claude
-- Groq for fast inference
-- xAI for Grok
-- The open source community
+If this project helps you, please consider:
+
+- ⭐ Starring the repository
+- 🐛 Reporting bugs
+- 💡 Suggesting features
+- 🤝 Contributing code
 
 ---
 
-**Made with ❤️ by the LLMCore team**
+<div align="center">
+
+**Built with ❤️ for the AI community**
+
+[GitHub](https://github.com/Akpughe/ts-llmcore) • [Documentation](https://github.com/Akpughe/ts-llmcore#readme) • [Email](mailto:davidakpughe2@gmail.com)
+
+</div>
