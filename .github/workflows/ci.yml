@@ -89,6 +89,31 @@ jobs:
       - name: Build package
         run: npm run build
 
+      - name: Verify build output exists
+        run: |
+          echo "Checking if dist directory exists and contains files..."
+          if [ ! -d dist ]; then
+            echo "❌ ERROR: dist directory does not exist after build"
+            echo "Build step may have failed or outputs to a different directory"
+            exit 1
+          fi
+
+          echo "✅ dist directory exists"
+          echo "Contents of dist directory:"
+          ls -la dist/
+
+          # Check if directory has actual files (not just empty)
+          file_count=$(find dist/ -type f | wc -l)
+          if [ "$file_count" -eq 0 ]; then
+            echo "❌ ERROR: dist directory is empty"
+            echo "Build step completed but produced no output files"
+            exit 1
+          fi
+
+          echo "✅ Found $file_count files in dist directory"
+          echo "Sample files:"
+          find dist/ -type f -name "*.js" -o -name "*.d.ts" -o -name "*.json" | head -5
+
       - name: Check bundle size
         run: npm run size-check
 
@@ -104,11 +129,15 @@ jobs:
           node -e "require('llm-core')"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: dist
-          path: dist/
+          name: build-dist
+          path: |
+            dist/
+            *.tgz
           retention-days: 7
+          if-no-files-found: warn
 
   security:
     name: Security Audit
